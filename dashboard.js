@@ -9,12 +9,16 @@ const Dashboard = (() => {
 
   // ── Init ───────────────────────────────────────────────
   async function init() {
-    // Populate year selector
     await UI.populateYearSelect('dashboard-year', _year);
 
     document.getElementById('dashboard-year').addEventListener('change', async (e) => {
       _year = parseInt(e.target.value, 10);
       await render();
+    });
+
+    document.getElementById('toggle-client-monthly-metric')?.addEventListener('click', async () => {
+      _clientMonthlyMetric = _clientMonthlyMetric === 'commission' ? 'amount' : 'commission';
+      await renderClientMonthlyTable();
     });
 
     await render();
@@ -26,6 +30,7 @@ const Dashboard = (() => {
       renderKPIs(),
       renderMonthlyTable(),
       renderClientBreakdown(),
+      renderClientMonthlyTable(),
     ]);
   }
 
@@ -161,6 +166,103 @@ const Dashboard = (() => {
       <td colspan="3">סה"כ</td>
       <td class="num">${UI.formatNumber(totalAmt)}</td>
       <td class="num">${UI.formatNumber(totalComm)}</td>
+    </tr>`;
+
+    tbody.innerHTML = rows;
+  }
+
+  // ── Per-Client Monthly Breakdown ───────────────────────
+  let _clientMonthlyMetric = 'commission'; // 'commission' | 'amount'
+
+  async function renderClientMonthlyTable() {
+    const thead = document.getElementById('client-monthly-thead');
+    const tbody = document.getElementById('client-monthly-tbody');
+    const toggleBtn = document.getElementById('toggle-client-monthly-metric');
+    if (!thead || !tbody) return;
+
+    if (toggleBtn) {
+      toggleBtn.textContent = _clientMonthlyMetric === 'commission' ? 'הצג הכנסות' : 'הצג עמלות';
+    }
+
+    const [allInvoices, allCases, allClients] = await Promise.all([
+      DB.invoices.getByYear(_year),
+      DB.cases.getAll(),
+      DB.clients.getAll(),
+    ]);
+
+    if (!allInvoices.length) {
+      thead.innerHTML = '';
+      tbody.innerHTML = UI.emptyRow(14, 'אין נתוני חשבוניות לשנה זו');
+      return;
+    }
+
+    const clientMap = {};
+    allClients.forEach(c => { clientMap[c.id] = c.name; });
+    const caseMap = {};
+    allCases.forEach(c => { caseMap[c.id] = c; });
+
+    // Build matrix: clientId → month → { amount, commission }
+    const matrix = {};
+    const activeClientIds = new Set();
+
+    allInvoices.forEach(inv => {
+      const c = caseMap[inv.caseId];
+      if (!c) return;
+      const cid = c.clientId;
+      activeClientIds.add(cid);
+      if (!matrix[cid]) matrix[cid] = {};
+      if (!matrix[cid][inv.month]) matrix[cid][inv.month] = { amount: 0, commission: 0 };
+      matrix[cid][inv.month].amount     += inv.amount;
+      matrix[cid][inv.month].commission += inv.commission;
+    });
+
+    const activeClients = [...activeClientIds]
+      .map(id => ({ id, name: clientMap[id] || '—' }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'he'));
+
+    // Header
+    const monthHeaders = Array.from({length:12}, (_,i) =>
+      `<th class="num" style="font-size:0.78rem;padding:8px 6px">${UI.monthName(i+1, true)}</th>`
+    ).join('');
+    thead.innerHTML = `<tr>
+      <th>לקוח</th>
+      ${monthHeaders}
+      <th class="num">סה"כ</th>
+    </tr>`;
+
+    // Rows
+    const metric = _clientMonthlyMetric;
+    const monthTotals = {};
+    let grandTotal = 0;
+    let rows = '';
+
+    activeClients.forEach(client => {
+      const months = matrix[client.id] || {};
+      let clientTotal = 0;
+      let cells = '';
+      for (let m = 1; m <= 12; m++) {
+        const val = (months[m] || {})[metric] || 0;
+        clientTotal += val;
+        monthTotals[m] = (monthTotals[m] || 0) + val;
+        cells += `<td class="num" style="font-size:0.8rem;padding:7px 6px">${val > 0 ? UI.formatNumber(val) : '<span style="color:var(--text-muted)">—</span>'}</td>`;
+      }
+      grandTotal += clientTotal;
+      rows += `<tr>
+        <td style="white-space:nowrap;font-size:0.88rem">${client.name}</td>
+        ${cells}
+        <td class="num ${metric === 'commission' ? 'text-gold' : ''}" style="font-size:0.88rem;font-weight:600">${UI.formatNumber(clientTotal)}</td>
+      </tr>`;
+    });
+
+    // Summary row
+    const totalCells = Array.from({length:12}, (_,i) => {
+      const v = monthTotals[i+1] || 0;
+      return `<td class="num">${v > 0 ? UI.formatNumber(v) : '—'}</td>`;
+    }).join('');
+    rows += `<tr class="summary-row">
+      <td>סה"כ</td>
+      ${totalCells}
+      <td class="num">${UI.formatNumber(grandTotal)}</td>
     </tr>`;
 
     tbody.innerHTML = rows;

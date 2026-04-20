@@ -9,6 +9,7 @@ const Clients = (() => {
   // ── Init ───────────────────────────────────────────────
   function init() {
     document.getElementById('btn-add-client').addEventListener('click', () => openClientModal());
+    document.getElementById('btn-merge-clients').addEventListener('click', () => openMergeModal());
     render();
   }
 
@@ -260,11 +261,118 @@ const Clients = (() => {
     );
   }
 
+  // ── Merge Clients Modal ────────────────────────────────
+  async function openMergeModal() {
+    const allClients = await DB.clients.getAll();
+
+    if (allClients.length < 2) {
+      UI.toast('נדרשים לפחות שני לקוחות למיזוג', 'warning');
+      return;
+    }
+
+    const checkboxes = allClients.map(c => `
+      <label class="merge-client-option" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;">
+        <input type="checkbox" name="merge-client" value="${c.id}" style="width:16px;height:16px;accent-color:var(--color-gold);cursor:pointer;" />
+        <span style="font-size:0.92rem">${escHtml(c.name)}</span>
+      </label>`
+    ).join('');
+
+    const bodyHTML = `
+      <div class="form-group">
+        <label class="form-label">בחר לקוחות למיזוג *</label>
+        <div id="merge-clients-list" style="border:1px solid var(--border-color);border-radius:8px;padding:8px;max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;background:var(--bg-secondary);">
+          ${checkboxes}
+        </div>
+        <small style="color:var(--text-muted);font-size:0.75rem;margin-top:6px;display:block">
+          כל התיקים של הלקוחות הנבחרים יועברו ללקוח המאוחד. הלקוחות הישנים יימחקו.
+        </small>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-merge-name">שם הלקוח המאוחד *</label>
+        <input type="text" id="f-merge-name" class="form-input" placeholder="לדוגמה: ישראל ישראלי" />
+      </div>
+      <div id="merge-preview" style="display:none;background:var(--bg-secondary);border-radius:8px;padding:12px;margin-top:4px;font-size:0.83rem;color:var(--text-secondary);border:1px solid var(--border-color)">
+        <strong style="color:var(--text-primary);display:block;margin-bottom:6px">תצוגה מקדימה:</strong>
+        <div id="merge-preview-content"></div>
+      </div>`;
+
+    UI.openModal({
+      title: 'מיזוג לקוחות',
+      bodyHTML,
+      confirmLabel: 'בצע מיזוג',
+      wide: true,
+      onConfirm: async () => {
+        const selected = [...document.querySelectorAll('input[name="merge-client"]:checked')]
+          .map(el => parseInt(el.value));
+        const newName = document.getElementById('f-merge-name').value.trim();
+
+        if (selected.length < 2) throw new Error('יש לבחור לפחות 2 לקוחות למיזוג');
+        if (!newName)             throw new Error('יש להזין שם ללקוח המאוחד');
+
+        await performMerge(selected, newName);
+      },
+    });
+
+    // Wire live preview
+    setTimeout(() => {
+      const updatePreview = () => {
+        const selected = [...document.querySelectorAll('input[name="merge-client"]:checked')]
+          .map(el => parseInt(el.value));
+        const preview  = document.getElementById('merge-preview');
+        const content  = document.getElementById('merge-preview-content');
+        const newName  = document.getElementById('f-merge-name')?.value.trim();
+        if (!preview || !content) return;
+
+        if (selected.length >= 2) {
+          const names = selected.map(id => {
+            const c = allClients.find(x => x.id === id);
+            return c ? escHtml(c.name) : '?';
+          });
+          preview.style.display = 'block';
+          content.innerHTML = `
+            <div style="margin-bottom:4px">${names.join(' &nbsp;+&nbsp; ')}</div>
+            <div style="margin:4px 0;color:var(--text-muted)">↓</div>
+            <div style="color:var(--color-gold);font-weight:600">${escHtml(newName) || '(שם לקוח חדש)'}</div>`;
+        } else {
+          preview.style.display = 'none';
+        }
+      };
+
+      document.querySelectorAll('input[name="merge-client"]').forEach(el =>
+        el.addEventListener('change', updatePreview)
+      );
+      document.getElementById('f-merge-name')?.addEventListener('input', updatePreview);
+      document.getElementById('f-merge-name')?.focus();
+    }, 80);
+  }
+
+  async function performMerge(clientIds, newClientName) {
+    // 1. Create new merged client
+    const newClientId = await DB.clients.add(newClientName);
+
+    // 2. Reassign all cases from selected clients to new client
+    const allCases = await DB.cases.getAll();
+    for (const c of allCases) {
+      if (clientIds.includes(c.clientId)) {
+        await DB.cases.update({ ...c, clientId: newClientId });
+      }
+    }
+
+    // 3. Delete the old clients
+    for (const id of clientIds) {
+      await DB.clients.delete(id);
+    }
+
+    UI.toast(`${clientIds.length} לקוחות אוחדו בהצלחה תחת "${newClientName}"`, 'success');
+    UI.closeModal();
+    await render();
+  }
+
   function escHtml(str) {
     return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  return { init, render, openClientModal, openCaseModal, deleteClient, deleteCase };
+  return { init, render, openClientModal, openCaseModal, deleteClient, deleteCase, openMergeModal };
 })();
 
 window.Clients = Clients;

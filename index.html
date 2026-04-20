@@ -158,6 +158,22 @@
             </table>
           </div>
         </div>
+        <!-- Per-Client Monthly Table -->
+        <div class="card mt-lg">
+          <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+            <h2 class="card-title">עמלות לפי לקוח וחודש</h2>
+            <button class="btn-ghost btn-sm" id="toggle-client-monthly-metric">הצג הכנסות</button>
+          </div>
+          <div class="table-wrap" style="overflow-x:auto">
+            <table class="data-table" id="client-monthly-table" style="min-width:900px">
+              <thead id="client-monthly-thead"></thead>
+              <tbody id="client-monthly-tbody">
+                <tr><td colspan="14" class="empty-state">טוען נתונים…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </section>
 
       <!-- ── VIEW: CLIENTS ── -->
@@ -168,6 +184,7 @@
             <p class="view-subtitle">ניהול לקוחות ותיקים משויכים</p>
           </div>
           <div class="view-actions">
+            <button class="btn-ghost" id="btn-merge-clients">⇌ מזג לקוחות</button>
             <button class="btn-primary" id="btn-add-client">+ לקוח חדש</button>
           </div>
         </header>
