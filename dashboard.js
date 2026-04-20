@@ -21,6 +21,11 @@ const Dashboard = (() => {
       await renderClientMonthlyTable();
     });
 
+    document.getElementById('toggle-client-monthly-group')?.addEventListener('click', async () => {
+      _clientMonthlyGroup = _clientMonthlyGroup === 'client' ? 'case' : 'client';
+      await renderClientMonthlyTable();
+    });
+
     await render();
   }
 
@@ -173,15 +178,20 @@ const Dashboard = (() => {
 
   // ── Per-Client Monthly Breakdown ───────────────────────
   let _clientMonthlyMetric = 'commission'; // 'commission' | 'amount'
+  let _clientMonthlyGroup  = 'client';     // 'client' | 'case'
 
   async function renderClientMonthlyTable() {
-    const thead = document.getElementById('client-monthly-thead');
-    const tbody = document.getElementById('client-monthly-tbody');
-    const toggleBtn = document.getElementById('toggle-client-monthly-metric');
+    const thead     = document.getElementById('client-monthly-thead');
+    const tbody     = document.getElementById('client-monthly-tbody');
+    const toggleMetricBtn = document.getElementById('toggle-client-monthly-metric');
+    const toggleGroupBtn  = document.getElementById('toggle-client-monthly-group');
     if (!thead || !tbody) return;
 
-    if (toggleBtn) {
-      toggleBtn.textContent = _clientMonthlyMetric === 'commission' ? 'הצג הכנסות' : 'הצג עמלות';
+    if (toggleMetricBtn) {
+      toggleMetricBtn.textContent = _clientMonthlyMetric === 'commission' ? 'הצג הכנסות' : 'הצג עמלות';
+    }
+    if (toggleGroupBtn) {
+      toggleGroupBtn.textContent = _clientMonthlyGroup === 'client' ? 'פירוט לפי תיק' : 'קיבוץ לפי לקוח';
     }
 
     const [allInvoices, allCases, allClients] = await Promise.all([
@@ -201,56 +211,86 @@ const Dashboard = (() => {
     const caseMap = {};
     allCases.forEach(c => { caseMap[c.id] = c; });
 
-    // Build matrix: clientId → month → { amount, commission }
+    const metric = _clientMonthlyMetric;
+    const byCase = _clientMonthlyGroup === 'case';
+
+    // Build matrix: rowKey → month → { amount, commission }
+    // rowKey = clientId (grouped) or caseId (detailed)
     const matrix = {};
-    const activeClientIds = new Set();
+    const rowMeta = {}; // rowKey → { label, subLabel, sortKey }
 
     allInvoices.forEach(inv => {
       const c = caseMap[inv.caseId];
       if (!c) return;
-      const cid = c.clientId;
-      activeClientIds.add(cid);
-      if (!matrix[cid]) matrix[cid] = {};
-      if (!matrix[cid][inv.month]) matrix[cid][inv.month] = { amount: 0, commission: 0 };
-      matrix[cid][inv.month].amount     += inv.amount;
-      matrix[cid][inv.month].commission += inv.commission;
+
+      const rowKey = byCase ? `case_${inv.caseId}` : `client_${c.clientId}`;
+
+      if (!matrix[rowKey]) {
+        matrix[rowKey] = {};
+        if (byCase) {
+          rowMeta[rowKey] = {
+            label:    clientMap[c.clientId] || '—',
+            subLabel: c.caseNumber + (c.description ? ' — ' + c.description : ''),
+            sortKey:  (clientMap[c.clientId] || '') + c.caseNumber,
+          };
+        } else {
+          rowMeta[rowKey] = {
+            label:    clientMap[c.clientId] || '—',
+            subLabel: null,
+            sortKey:  clientMap[c.clientId] || '',
+          };
+        }
+      }
+
+      if (!matrix[rowKey][inv.month]) matrix[rowKey][inv.month] = { amount: 0, commission: 0 };
+      matrix[rowKey][inv.month].amount     += inv.amount;
+      matrix[rowKey][inv.month].commission += inv.commission;
     });
 
-    const activeClients = [...activeClientIds]
-      .map(id => ({ id, name: clientMap[id] || '—' }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'he'));
+    // Sort rows
+    const sortedKeys = Object.keys(matrix)
+      .sort((a, b) => rowMeta[a].sortKey.localeCompare(rowMeta[b].sortKey, 'he'));
 
     // Header
     const monthHeaders = Array.from({length:12}, (_,i) =>
       `<th class="num" style="font-size:0.78rem;padding:8px 6px">${UI.monthName(i+1, true)}</th>`
     ).join('');
     thead.innerHTML = `<tr>
-      <th>לקוח</th>
+      <th>${byCase ? 'לקוח / תיק' : 'לקוח'}</th>
       ${monthHeaders}
       <th class="num">סה"כ</th>
     </tr>`;
 
     // Rows
-    const metric = _clientMonthlyMetric;
     const monthTotals = {};
     let grandTotal = 0;
     let rows = '';
 
-    activeClients.forEach(client => {
-      const months = matrix[client.id] || {};
-      let clientTotal = 0;
-      let cells = '';
+    sortedKeys.forEach(rowKey => {
+      const meta   = rowMeta[rowKey];
+      const months = matrix[rowKey] || {};
+      let rowTotal = 0;
+      let cells    = '';
+
       for (let m = 1; m <= 12; m++) {
         const val = (months[m] || {})[metric] || 0;
-        clientTotal += val;
+        rowTotal += val;
         monthTotals[m] = (monthTotals[m] || 0) + val;
         cells += `<td class="num" style="font-size:0.8rem;padding:7px 6px">${val > 0 ? UI.formatNumber(val) : '<span style="color:var(--text-muted)">—</span>'}</td>`;
       }
-      grandTotal += clientTotal;
+      grandTotal += rowTotal;
+
+      const labelCell = byCase
+        ? `<td style="font-size:0.85rem">
+            <div style="font-weight:500">${meta.label}</div>
+            <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);margin-top:2px">${meta.subLabel}</div>
+           </td>`
+        : `<td style="font-size:0.88rem;white-space:nowrap">${meta.label}</td>`;
+
       rows += `<tr>
-        <td style="white-space:nowrap;font-size:0.88rem">${client.name}</td>
+        ${labelCell}
         ${cells}
-        <td class="num ${metric === 'commission' ? 'text-gold' : ''}" style="font-size:0.88rem;font-weight:600">${UI.formatNumber(clientTotal)}</td>
+        <td class="num ${metric === 'commission' ? 'text-gold' : ''}" style="font-size:0.88rem;font-weight:600">${UI.formatNumber(rowTotal)}</td>
       </tr>`;
     });
 

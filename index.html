@@ -162,7 +162,10 @@
         <div class="card mt-lg">
           <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
             <h2 class="card-title">עמלות לפי לקוח וחודש</h2>
-            <button class="btn-ghost btn-sm" id="toggle-client-monthly-metric">הצג הכנסות</button>
+            <div style="display:flex;gap:8px">
+              <button class="btn-ghost btn-sm" id="toggle-client-monthly-group">פירוט לפי תיק</button>
+              <button class="btn-ghost btn-sm" id="toggle-client-monthly-metric">הצג הכנסות</button>
+            </div>
           </div>
           <div class="table-wrap" style="overflow-x:auto">
             <table class="data-table" id="client-monthly-table" style="min-width:900px">
