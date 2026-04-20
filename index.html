@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LexLedger — ניהול שכר טרחה</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- External Libraries (CDN) -->
+  <!-- SheetJS (xlsx) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== APP SHELL ===== -->
+  <div id="app" class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">⚖</span>
+        <div class="brand-text">
+          <span class="brand-name">LexLedger</span>
+          <span class="brand-sub">ניהול שכר טרחה</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <a class="nav-item active" data-view="dashboard" href="#dashboard">
+          <span class="nav-icon">◈</span>
+          <span class="nav-label">דאשבורד</span>
+        </a>
+        <a class="nav-item" data-view="clients" href="#clients">
+          <span class="nav-icon">◉</span>
+          <span class="nav-label">לקוחות ותיקים</span>
+        </a>
+        <a class="nav-item" data-view="invoices" href="#invoices">
+          <span class="nav-icon">◎</span>
+          <span class="nav-label">חשבוניות</span>
+        </a>
+        <a class="nav-item" data-view="payments" href="#payments">
+          <span class="nav-icon">◐</span>
+          <span class="nav-label">תשלומים שהתקבלו</span>
+        </a>
+        <a class="nav-item" data-view="import" href="#import">
+          <span class="nav-icon">◳</span>
+          <span class="nav-label">ייבוא נתונים</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-ghost btn-sm" id="btn-export-backup" title="גיבוי JSON מלא">
+          <span class="nav-icon">↓</span> גיבוי
+        </button>
+        <button class="btn-ghost btn-sm" id="btn-import-backup" title="שחזור מגיבוי JSON">
+          <span class="nav-icon">↑</span> שחזור
+        </button>
+        <input type="file" id="input-restore-file" accept=".json" style="display:none" />
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="main-content">
+
+      <!-- ── VIEW: DASHBOARD ── -->
+      <section class="view" id="view-dashboard">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">דאשבורד</h1>
+            <p class="view-subtitle">סיכום שנתי וחודשי</p>
+          </div>
+          <div class="view-actions">
+            <label class="label-sm">שנה</label>
+            <select id="dashboard-year" class="select-sm"></select>
+          </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpi-grid">
+          <div class="kpi-card kpi-opening">
+            <span class="kpi-label">יתרת פתיחה</span>
+            <span class="kpi-value" id="kpi-opening">—</span>
+            <span class="kpi-unit">₪</span>
+          </div>
+          <div class="kpi-card kpi-commissions">
+            <span class="kpi-label">עמלות שנצברו</span>
+            <span class="kpi-value" id="kpi-commissions">—</span>
+            <span class="kpi-unit">₪</span>
+          </div>
+          <div class="kpi-card kpi-payments">
+            <span class="kpi-label">תשלומים שהתקבלו</span>
+            <span class="kpi-value" id="kpi-payments">—</span>
+            <span class="kpi-unit">₪</span>
+          </div>
+          <div class="kpi-card kpi-balance">
+            <span class="kpi-label">יתרה לתשלום</span>
+            <span class="kpi-value" id="kpi-balance">—</span>
+            <span class="kpi-unit">₪</span>
+          </div>
+        </div>
+
+        <!-- Monthly Breakdown Table -->
+        <div class="card mt-lg">
+          <div class="card-header">
+            <h2 class="card-title">פירוט חודשי</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="monthly-table">
+              <thead>
+                <tr>
+                  <th>חודש</th>
+                  <th class="num">הכנסות</th>
+                  <th class="num">עמלה</th>
+                  <th class="num">תשלומים</th>
+                  <th class="num">יתרה מצטברת</th>
+                </tr>
+              </thead>
+              <tbody id="monthly-tbody">
+                <tr><td colspan="5" class="empty-state">טוען נתונים…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Per-Client Table -->
+        <div class="card mt-lg">
+          <div class="card-header">
+            <h2 class="card-title">פירוט לפי לקוח</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="client-breakdown-table">
+              <thead>
+                <tr>
+                  <th>לקוח</th>
+                  <th>תיק</th>
+                  <th class="num">% עמלה</th>
+                  <th class="num">סך הכנסות</th>
+                  <th class="num">סך עמלות</th>
+                </tr>
+              </thead>
+              <tbody id="client-breakdown-tbody">
+                <tr><td colspan="5" class="empty-state">טוען נתונים…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── VIEW: CLIENTS ── -->
+      <section class="view hidden" id="view-clients">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">לקוחות ותיקים</h1>
+            <p class="view-subtitle">ניהול לקוחות ותיקים משויכים</p>
+          </div>
+          <div class="view-actions">
+            <button class="btn-primary" id="btn-add-client">+ לקוח חדש</button>
+          </div>
+        </header>
+        <div id="clients-list" class="clients-list">
+          <!-- populated by clients.js -->
+        </div>
+      </section>
+
+      <!-- ── VIEW: INVOICES ── -->
+      <section class="view hidden" id="view-invoices">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">חשבוניות</h1>
+            <p class="view-subtitle">הזנה ידנית, קריאת PDF וצפייה בהיסטוריה</p>
+          </div>
+          <div class="view-actions">
+            <select id="invoice-filter-year" class="select-sm"></select>
+            <select id="invoice-filter-client" class="select-sm">
+              <option value="">כל הלקוחות</option>
+            </select>
+            <button class="btn-primary" id="btn-add-invoice">+ חשבונית ידנית</button>
+          </div>
+        </header>
+
+        <!-- PDF Drop Zone -->
+        <div class="pdf-dropzone" id="pdf-dropzone">
+          <div class="dropzone-inner">
+            <span class="drop-icon">📄</span>
+            <p class="drop-title">גרור PDF לכאן לחילוץ אוטומטי</p>
+            <p class="drop-sub">או <label for="input-pdf-file" class="link-inline">לחץ לבחור קובץ</label></p>
+            <input type="file" id="input-pdf-file" accept=".pdf" style="display:none" />
+          </div>
+        </div>
+
+        <div class="card mt-lg">
+          <div class="card-header">
+            <h2 class="card-title">היסטוריית חשבוניות</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="invoices-table">
+              <thead>
+                <tr>
+                  <th>לקוח</th>
+                  <th>תיק</th>
+                  <th>חודש</th>
+                  <th>שנה</th>
+                  <th class="num">סכום</th>
+                  <th class="num">% עמלה</th>
+                  <th class="num">עמלה</th>
+                  <th>מקור</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="invoices-tbody">
+                <tr><td colspan="9" class="empty-state">אין חשבוניות להצגה</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── VIEW: PAYMENTS ── -->
+      <section class="view hidden" id="view-payments">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">תשלומים שהתקבלו</h1>
+            <p class="view-subtitle">רישום תשלומים בפועל</p>
+          </div>
+          <div class="view-actions">
+            <select id="payments-filter-year" class="select-sm"></select>
+            <button class="btn-primary" id="btn-add-payment">+ תשלום חדש</button>
+          </div>
+        </header>
+        <div class="card">
+          <div class="table-wrap">
+            <table class="data-table" id="payments-table">
+              <thead>
+                <tr>
+                  <th>חודש</th>
+                  <th>שנה</th>
+                  <th class="num">סכום</th>
+                  <th>הערות</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="payments-tbody">
+                <tr><td colspan="5" class="empty-state">אין תשלומים רשומים</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── VIEW: IMPORT ── -->
+      <section class="view hidden" id="view-import">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">ייבוא נתונים</h1>
+            <p class="view-subtitle">טעינת קובץ Excel ראשוני</p>
+          </div>
+        </header>
+
+        <div class="import-steps">
+          <div class="card import-card">
+            <div class="card-header">
+              <span class="step-badge">1</span>
+              <h2 class="card-title">בחר קובץ Excel להייבוא</h2>
+            </div>
+            <p class="card-desc">בחר את קובץ ה-Excel עם הנתונים ההיסטוריים. המערכת תנתח ותייבא לקוחות, תיקים, הכנסות ועמלות.</p>
+            <div class="import-dropzone" id="excel-dropzone">
+              <span class="drop-icon">📊</span>
+              <p>גרור קובץ Excel לכאן</p>
+              <p class="drop-sub">או <label for="input-excel-file" class="link-inline">לחץ לבחור קובץ</label></p>
+              <input type="file" id="input-excel-file" accept=".xlsx,.xls,.csv" style="display:none" />
+            </div>
+            <div id="excel-preview" class="hidden mt-lg">
+              <!-- Preview rendered here before confirm -->
+            </div>
+            <div id="excel-confirm-actions" class="hidden mt-md flex-end">
+              <button class="btn-ghost" id="btn-import-cancel">ביטול</button>
+              <button class="btn-primary" id="btn-import-confirm">✔ אשר ייבוא</button>
+            </div>
+          </div>
+
+          <div class="card import-card mt-lg">
+            <div class="card-header">
+              <span class="step-badge">2</span>
+              <h2 class="card-title">הגדר יתרת פתיחה</h2>
+            </div>
+            <p class="card-desc">הגדר את יתרת הפתיחה עבור כל שנה. (לדוגמה: 2025 = 4,119.38 ₪)</p>
+            <div class="balance-inputs" id="balance-inputs">
+              <div class="form-row">
+                <label class="form-label">שנה</label>
+                <input type="number" id="balance-year" class="form-input input-sm" value="2025" min="2000" max="2100" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">יתרת פתיחה (₪)</label>
+                <input type="number" id="balance-amount" class="form-input input-sm" step="0.01" />
+              </div>
+              <button class="btn-primary mt-sm" id="btn-save-balance">שמור יתרת פתיחה</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- Generic Modal Container -->
+  <div class="modal-overlay hidden" id="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modal-close" aria-label="סגור">✕</button>
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title"></h2>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- dynamic content -->
+      </div>
+      <div class="modal-footer" id="modal-footer">
+        <button class="btn-ghost" id="modal-cancel">ביטול</button>
+        <button class="btn-primary" id="modal-confirm">שמור</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Confirm Modal -->
+  <div class="modal-overlay hidden" id="pdf-modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal modal-lg" id="pdf-modal">
+      <button class="modal-close" id="pdf-modal-close" aria-label="סגור">✕</button>
+      <div class="modal-header">
+        <h2 class="modal-title">אישור נתוני PDF</h2>
+        <p class="modal-sub">בדוק את הנתונים שחולצו ואשר שמירה</p>
+      </div>
+      <div class="modal-body" id="pdf-modal-body">
+        <!-- PDF extracted data form -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" id="pdf-modal-cancel">ביטול</button>
+        <button class="btn-primary" id="pdf-modal-save">✔ אשר ושמור חשבונית</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- App Scripts (order matters) -->
+  <script src="db.js"></script>
+  <script src="ui.js"></script>
+  <script src="import.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="clients.js"></script>
+  <script src="invoices.js"></script>
+  <script src="payments.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
