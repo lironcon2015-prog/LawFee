@@ -372,7 +372,6 @@
 
             <div style="display:flex;gap:10px">
               <button class="btn-primary" id="btn-check-update">🔍 בדוק עדכונים</button>
-              <button class="btn-ghost" id="btn-set-version">✎ עדכן גרסה ידנית</button>
             </div>
 
           </div>
@@ -442,5 +441,20 @@
   <script src="payments.js"></script>
   <script src="settings.js"></script>
   <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        // כשיש SW חדש שמחכה — הודע למשתמש
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              UI.toast('גרסה חדשה זמינה — עבור להגדרות לעדכון', 'info', 6000);
+            }
+          });
+        });
+      });
+    }
+  </script>
 </body>
 </html>
