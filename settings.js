@@ -7,7 +7,7 @@
 const Settings = (() => {
 
   const CURRENT_VERSION = '1.0.0';
-  const GITHUB_RELEASES = 'https://api.github.com/repos/your-username/lexledger/releases/latest';
+  const GITHUB_RELEASES = 'https://api.github.com/repos/lironcon2015-prog/LawFee/releases/latest';
   // ↑ Replace with your actual GitHub repo URL if you publish there.
   //   If not using GitHub, the "check updates" button will show a message accordingly.
 
@@ -44,7 +44,11 @@ const Settings = (() => {
 
     try {
       const res  = await fetch(GITHUB_RELEASES);
-      if (!res.ok) throw new Error('לא ניתן להגיע לשרת העדכונים');
+      if (res.status === 404) {
+        _showStatus('לא נמצאו releases בריפו — צור Release ב-GitHub כדי לאפשר בדיקת עדכונים.', 'warning');
+        return;
+      }
+      if (!res.ok) throw new Error('שגיאת רשת');
 
       const data   = await res.json();
       const latest = (data.tag_name || '').replace(/^v/, '');
