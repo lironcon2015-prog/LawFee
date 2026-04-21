@@ -5,7 +5,7 @@
  */
 
 const CACHE_PREFIX = 'lexledger-v';
-let CACHE_NAME = CACHE_PREFIX + '1.0.0';
+let CACHE_NAME = CACHE_PREFIX + '1.1.0';
 
 const ASSETS = [
   './',
