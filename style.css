@@ -1,6 +1,6 @@
 /* =========================================================
-   LexLedger — style.css (REDESIGNED)
-   Light professional theme · RTL Hebrew · Desktop-first
+   LexLedger — style.css
+   Legal Modern theme · emerald · RTL Hebrew · Desktop-first
    Drop-in replacement — all original class names preserved.
    ========================================================= */
 
@@ -8,44 +8,44 @@
 
 /* ── CSS Variables ─────────────────────────────────────── */
 :root {
-  /* Neutrals — warm off-whites, cool subtle grays */
+  /* Neutrals — warm cream / ivory scale */
   --n-0:   #ffffff;
-  --n-25:  #fbfbfa;
-  --n-50:  #f7f7f5;
-  --n-100: #efefec;
-  --n-150: #e6e6e2;
-  --n-200: #d9d9d4;
-  --n-300: #b8b8b1;
-  --n-400: #8a8a82;
-  --n-500: #5f5f58;
-  --n-600: #3f3f3a;
-  --n-700: #262624;
-  --n-900: #111110;
+  --n-25:  #faf9f6;
+  --n-50:  #f4f2ec;
+  --n-100: #ece9e0;
+  --n-150: #e5e2d8;
+  --n-200: #d5d1c4;
+  --n-300: #b0ac9e;
+  --n-400: #999488;
+  --n-500: #6b6a5e;
+  --n-600: #46453b;
+  --n-700: #2c2b22;
+  --n-900: #1a1a16;
 
-  /* Accent — indigo fintech */
-  --accent:        oklch(0.52 0.19 265);
-  --accent-hover:  oklch(0.46 0.20 265);
+  /* Accent — emerald legal */
+  --accent:        oklch(0.42 0.10 165);
+  --accent-hover:  oklch(0.36 0.10 165);
   --accent-fg:     #ffffff;
-  --accent-soft:   oklch(0.96 0.03 265);
-  --accent-border: oklch(0.88 0.06 265);
-  --accent-text:   oklch(0.42 0.19 265);
+  --accent-soft:   oklch(0.95 0.03 165);
+  --accent-border: oklch(0.85 0.06 165);
+  --accent-text:   oklch(0.35 0.11 165);
 
   /* Surfaces */
-  --bg-app:        var(--n-25);
-  --bg-sidebar:    var(--n-0);
-  --bg-card:       var(--n-0);
-  --bg-card-alt:   var(--n-50);
-  --bg-hover:      var(--n-100);
-  --bg-input:      var(--n-0);
-  --bg-table-head: var(--n-50);
-  --bg-row-alt:    var(--n-25);
-  --bg-dropzone:   var(--n-50);
-  --bg-secondary:  var(--n-50);
+  --bg-app:        #faf9f6;
+  --bg-sidebar:    #ffffff;
+  --bg-card:       #ffffff;
+  --bg-card-alt:   #f4f2ec;
+  --bg-hover:      #ece9e0;
+  --bg-input:      #ffffff;
+  --bg-table-head: #f4f2ec;
+  --bg-row-alt:    #faf9f6;
+  --bg-dropzone:   #f4f2ec;
+  --bg-secondary:  #f4f2ec;
 
   /* Borders */
-  --border:        var(--n-150);
-  --border-color:  var(--n-150);
-  --border-light:  var(--n-200);
+  --border:        #e5e2d8;
+  --border-color:  #e5e2d8;
+  --border-light:  #d5d1c4;
   --border-focus:  var(--accent);
 
   /* Gold palette — repurposed as muted accents (kept for compat) */
@@ -59,22 +59,22 @@
   --color-gold: var(--accent);
 
   /* Text */
-  --text-primary:   var(--n-900);
-  --text-secondary: var(--n-500);
-  --text-muted:     var(--n-400);
+  --text-primary:   #1a1a16;
+  --text-secondary: #6b6a5e;
+  --text-muted:     #999488;
   --text-inverse:   #ffffff;
 
   /* Semantic */
-  --color-positive: oklch(0.58 0.14 155);
-  --color-negative: oklch(0.56 0.18 25);
+  --color-positive: oklch(0.55 0.13 155);
+  --color-negative: oklch(0.56 0.17 28);
   --color-warning:  oklch(0.72 0.14 75);
   --color-info:     oklch(0.55 0.15 240);
 
   /* KPI card accents */
   --kpi-opening:     oklch(0.55 0.15 240);
   --kpi-commissions: var(--accent);
-  --kpi-payments:    oklch(0.58 0.14 155);
-  --kpi-balance:     oklch(0.56 0.18 25);
+  --kpi-payments:    oklch(0.55 0.13 155);
+  --kpi-balance:     oklch(0.56 0.17 28);
 
   /* Sizing */
   --sidebar-width: 240px;
