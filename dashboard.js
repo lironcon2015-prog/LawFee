@@ -41,7 +41,10 @@ const Dashboard = (() => {
 
   // ── KPI Cards ──────────────────────────────────────────
   async function renderKPIs() {
-    const ledger = await DB.balances.computeLedger(_year);
+    const [ledger, totalRevenue] = await Promise.all([
+      DB.balances.computeLedger(_year),
+      DB.invoices.totalAmountForYear(_year),
+    ]);
 
     const set = (id, val) => {
       const el = document.getElementById(id);
@@ -49,6 +52,7 @@ const Dashboard = (() => {
     };
 
     set('kpi-opening',     ledger.openingBalance);
+    set('kpi-revenue',     totalRevenue);
     set('kpi-commissions', ledger.totalCommissions);
     set('kpi-payments',    ledger.totalPayments);
 
