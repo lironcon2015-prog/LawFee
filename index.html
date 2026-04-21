@@ -60,6 +60,10 @@
           <span class="nav-icon">◳</span>
           <span class="nav-label">ייבוא נתונים</span>
         </a>
+        <a class="nav-item" data-view="settings" href="#settings">
+          <span class="nav-icon">◈</span>
+          <span class="nav-label">הגדרות</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -338,6 +342,53 @@
         </div>
       </section>
 
+      <!-- ── VIEW: SETTINGS ── -->
+      <section class="view hidden" id="view-settings">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">הגדרות</h1>
+            <p class="view-subtitle">מידע על המערכת ועדכונים</p>
+          </div>
+        </header>
+
+        <div class="card" style="max-width:520px">
+          <div class="card-header">
+            <h2 class="card-title">גרסת המערכת</h2>
+          </div>
+          <div style="padding:20px 24px;display:flex;flex-direction:column;gap:20px">
+
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--bg-secondary);border-radius:10px;border:1px solid var(--border-color)">
+              <div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:4px">גרסה נוכחית</div>
+                <div id="settings-current-version" style="font-family:var(--font-mono);font-size:1.4rem;font-weight:600;color:var(--color-gold)">—</div>
+              </div>
+              <div style="text-align:left">
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:4px">תאריך עדכון אחרון</div>
+                <div id="settings-update-date" style="font-family:var(--font-mono);font-size:0.88rem;color:var(--text-secondary)">—</div>
+              </div>
+            </div>
+
+            <div id="settings-update-status" style="display:none;padding:12px 16px;border-radius:8px;font-size:0.88rem"></div>
+
+            <div style="display:flex;gap:10px">
+              <button class="btn-primary" id="btn-check-update">🔍 בדוק עדכונים</button>
+              <button class="btn-ghost" id="btn-set-version">✎ עדכן גרסה ידנית</button>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card mt-lg" style="max-width:520px">
+          <div class="card-header">
+            <h2 class="card-title">אודות</h2>
+          </div>
+          <div style="padding:20px 24px;display:flex;flex-direction:column;gap:8px;color:var(--text-secondary);font-size:0.88rem">
+            <div><strong style="color:var(--text-primary)">LexLedger</strong> — מערכת ניהול שכר טרחה לעורכי דין</div>
+            <div>כל הנתונים שמורים מקומית בדפדפן בלבד (IndexedDB). אין שרת חיצוני.</div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -389,6 +440,7 @@
   <script src="clients.js"></script>
   <script src="invoices.js"></script>
   <script src="payments.js"></script>
+  <script src="settings.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -11,6 +11,7 @@ const App = (() => {
     invoices:  { el: 'view-invoices',  module: () => Invoices  },
     payments:  { el: 'view-payments',  module: () => Payments  },
     import:    { el: 'view-import',    module: () => null       },
+    settings:  { el: 'view-settings',  module: () => Settings  },
   };
 
   let _currentView = 'dashboard';
