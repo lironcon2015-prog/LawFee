@@ -93,32 +93,53 @@
           </div>
         </header>
 
-        <!-- KPI Cards -->
-        <div class="kpi-grid" id="kpi-grid">
-          <div class="kpi-card kpi-opening">
-            <span class="kpi-label">יתרת פתיחה</span>
-            <span class="kpi-value" id="kpi-opening">—</span>
-            <span class="kpi-unit">₪</span>
-          </div>
-          <div class="kpi-card" style="border-color:var(--border-color)">
-            <span class="kpi-label">הכנסה כוללת</span>
-            <span class="kpi-value" id="kpi-revenue">—</span>
-            <span class="kpi-unit">₪</span>
-          </div>
-          <div class="kpi-card kpi-commissions">
-            <span class="kpi-label">עמלות שנצברו</span>
-            <span class="kpi-value" id="kpi-commissions">—</span>
-            <span class="kpi-unit">₪</span>
-          </div>
-          <div class="kpi-card kpi-payments">
-            <span class="kpi-label">תשלומים שהתקבלו</span>
-            <span class="kpi-value" id="kpi-payments">—</span>
-            <span class="kpi-unit">₪</span>
-          </div>
-          <div class="kpi-card kpi-balance">
+        <!-- Hero KPI + supporting KPIs -->
+        <div class="dash-hero">
+          <div class="hero-balance">
             <span class="kpi-label">יתרה לתשלום</span>
-            <span class="kpi-value" id="kpi-balance">—</span>
-            <span class="kpi-unit">₪</span>
+            <div class="hero-value">
+              <span class="kpi-value" id="kpi-balance">—</span>
+              <span class="hero-unit">₪</span>
+            </div>
+            <div class="hero-meta" id="hero-meta">—</div>
+          </div>
+          <div class="hero-kpis">
+            <div class="mini-kpi">
+              <span class="kpi-label">יתרת פתיחה</span>
+              <span class="kpi-value" id="kpi-opening">—</span>
+            </div>
+            <div class="mini-kpi">
+              <span class="kpi-label">הכנסה כוללת</span>
+              <span class="kpi-value" id="kpi-revenue">—</span>
+            </div>
+            <div class="mini-kpi">
+              <span class="kpi-label">עמלות שנצברו</span>
+              <span class="kpi-value" id="kpi-commissions">—</span>
+            </div>
+            <div class="mini-kpi">
+              <span class="kpi-label">תשלומים שהתקבלו</span>
+              <span class="kpi-value" id="kpi-payments">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="charts-row mt-lg">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h2 class="card-title">תזרים חודשי</h2>
+              <div class="chart-legend">
+                <span class="lgnd"><i class="lgnd-dot" style="background:var(--accent)"></i>הכנסות</span>
+                <span class="lgnd"><i class="lgnd-dot" style="background:var(--color-positive)"></i>עמלות</span>
+              </div>
+            </div>
+            <div class="chart-body" id="monthly-chart"></div>
+          </div>
+          <div class="card chart-card chart-donut-card">
+            <div class="card-header">
+              <h2 class="card-title">פילוח הכנסות לפי לקוח</h2>
+            </div>
+            <div class="chart-body donut-body" id="client-donut"></div>
           </div>
         </div>
 
