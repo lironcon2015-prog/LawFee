@@ -77,17 +77,17 @@
   </script>
 <style>
     :root {
-      --bg-primary:    #FBFBFD;
+      --bg-primary:    #FDFDFB;
       --bg-secondary:  #FFFFFF;
       --text-primary:  #111114;
       --text-secondary:#5A5F72;
       --text-muted:    #9EA3B0;
-      --border-color:  #EBEBEF;
+      --border-color:  rgba(0,0,0,0.06);
       --accent:        #0F1E36;
       --color-positive:#166534;
       --color-negative:#7F1D1D;
-      --color-gold:    #C5A880;
-      --font-mono:     'Inter', 'IBM Plex Mono', monospace;
+      --color-gold:    #D4AF37;
+      --font-mono:     'IBM Plex Mono', monospace;
       --font-num:      'Inter', sans-serif;
     }
     body {
@@ -96,19 +96,13 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
-    /* Material icons — thin weight globally */
     .material-symbols-outlined {
       font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
     }
     .hidden { display: none !important; }
-    .view { animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
     .modal-overlay {
-      background-color: rgba(10, 11, 15, 0.55);
-      backdrop-filter: blur(12px);
+      background-color: rgba(10,11,15,0.55);
+      backdrop-filter: blur(16px);
       z-index: 50;
     }
     .data-table th.num, .data-table td.num {
@@ -122,44 +116,47 @@
     }
     /* Dark-glass hero card */
     .dark-glass {
-      background: linear-gradient(160deg, #1A1C23 0%, #0A0A0C 100%);
-      box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.15), 0 30px 60px -15px rgba(0,0,0,0.6);
+      background: linear-gradient(135deg, #1A1A1C 0%, #0A0A0B 100%);
+      position: relative; overflow: hidden;
+      box-shadow: 0 40px 80px -20px rgba(0,0,0,0.5);
+    }
+    .dark-glass::after {
+      content: '';
+      position: absolute; top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 75% 25%, rgba(212,175,55,0.18) 0%, transparent 60%);
+      pointer-events: none;
     }
     /* Executive ring card */
     .exec-card {
       background: #FFFFFF;
-      ring: 1px inset rgba(0,0,0,0.05);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px -4px rgba(0,0,0,0.03);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.01);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.4s ease;
     }
-    /* Financial number class */
+    .exec-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 40px 80px -12px rgba(0,0,0,0.08);
+    }
     .num-val {
       font-family: var(--font-num);
       font-feature-settings: 'tnum';
       letter-spacing: -0.02em;
     }
     .dropzone-inner, .import-dropzone {
-      border: 1.5px dashed var(--border-color); border-radius: 1rem;
-      background-color: rgba(255,255,255,0.7); backdrop-filter: blur(4px);
-      transition: all 0.25s ease;
+      border: 1px solid rgba(0,0,0,0.08); border-radius: 24px;
+      background-color: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+      transition: all 0.3s ease;
     }
     .dropzone-inner:hover, .import-dropzone:hover {
-      border-color: var(--accent); background-color: rgba(239,246,255,0.9);
-      box-shadow: 0 8px 24px -4px rgba(29,78,216,0.08);
+      border-color: rgba(212,175,55,0.4);
+      background-color: rgba(255,255,255,0.95);
+      box-shadow: 0 16px 40px -8px rgba(0,0,0,0.06);
+      transform: translateY(-2px);
     }
-    .gold-gradient-text {
-      background: linear-gradient(to right, #B8860B, #D4AF37, #B8860B);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
   </style>
 </head>
 <body class="font-sans antialiased text-neutral-900 bg-exec-bg selection:bg-exec-sapphire/20 selection:text-exec-sapphire">
-<script>window._BUNDLE_VERSION = '2.1.0';</script>
+<script>window._BUNDLE_VERSION = '2.2.0';</script>
 <div class="flex h-screen overflow-hidden" id="app">
 <!-- SIDEBAR — Executive Carbon -->
 <aside class="w-64 flex-shrink-0 flex flex-col z-20" id="sidebar" style="background:#050505;border-left:none;">
